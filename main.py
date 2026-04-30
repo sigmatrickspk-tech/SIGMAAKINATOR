@@ -999,6 +999,52 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE, catego
 # ADMIN PANEL
 # ============================================================
 
-async def admin_panel(update: Update,                                    
+async def admin_panel(update: Update,context: ContextTypes.DEFAULT_TYPE):
+    """Admin panel main menu"""
+    uid = update.effective_user.id
+    if uid not in ADMIN_IDS:
+        await update.callback_query.answer("⛔ Unauthorized", show_alert=True)
+        return
+
+    stats = f"**Users:** {db.get_user_count()}\n**Games:** {db.data['total_games']}\n**Revenue:** Rs.{db.get_total_premium_revenue()}\n**Coins Earned:** {db.data['total_coins_earned']} 🪙\n**Coins Spent:** {db.data['total_coins_spent']} 🪙"
+    text = (
+        f"👑 **Admin Panel**\n"
+        f"━" * 24 + "\n\n"
+        f"{stats}\n\n"
+        f"**Commands (in chat):**\n"
+        f"• `/addcoins <uid> <amount>` — Add coins\n"
+        f"• `/setcoins <uid> <amount>` — Set coins\n"
+        f"• `/grantprem <uid> <days>` — Grant premium\n"
+        f"• `/removeprem <uid>` — Remove premium\n"
+        f"• `/ban <uid> [reason]` — Ban user\n"
+        f"• `/unban <uid>` — Unban user\n"
+        f"• `/info <uid>` — User info\n"
+        f"• `/broadcast <msg>` — Broadcast to all\n"
+        f"• `/logs` — Admin logs"
+    )
+    keyboard = [
+        [InlineKeyboardButton("💸 Premium Sales", callback_data=cb("admin_sales"))],
+        [InlineKeyboardButton("📊 User List", callback_data=cb("admin_users"))],
+        [InlineKeyboardButton("📋 Admin Logs", callback_data=cb("admin_logs"))],
+        [InlineKeyboardButton("🔙 Back", callback_data=cb("home"))],
+    ]
+    await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+
+
+async def admin_sales(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show premium sales"""
+    if update.effective_user.id not in ADMIN_IDS:
+        return
+    sales = db.get_premium_sales(15)
+    if not sales:
+        text = "💸 **No sales yet.**"
+    else:
+        text = "💸 **Premium Sales Log**\n" + "━" * 24 + "\n\n"
+        for s in reversed(sales):
+            uid = s.get("user_id", "?")
+            plan = s.get("plan", "?")
+            days = s.get("days", "?")
+            amount = s.get("amount_pkr", "?")
+                        
 
     
